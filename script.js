@@ -1,15 +1,51 @@
-document.addEventListener('DOMContentLoaded', function () {
-  function updateTime() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('ja-JP', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-    document.getElementById('current-time').textContent = timeString;
-  }
+let isSeismicAudioPlaying = false; // 音声再生中フラグ
+let isEEWPlaying = false;
 
-  setInterval(updateTime, 1000);
+// 音声再生をユーザーのクリックでトリガーする関数
+function playAudio(file, isPlayingFlag, callback) {
+  if (!isPlayingFlag) {
+    const audio = new Audio(file);
+    audio
+      .play()
+      .then(() => {
+        if (callback) callback();
+        audio.addEventListener('ended', () => {
+          isPlayingFlag = false;
+        });
+      })
+      .catch((error) => {
+        console.error(`${file}の音声再生エラー:`, error);
+        alert('音声再生の許可が必要です。再度試してください。');
+      });
+  }
+}
+
+function playAudioOnUserInteraction() {
+  if (!userInteracted) {
+    userInteracted = true; // ユーザーが一度操作したら再度呼び出されないようにする
+    playAudio('music/sindsokuhou.mp3', isSeismicAudioPlaying, () => {
+      isSeismicAudioPlaying = true;
+    });
+    playAudio('music/eew.mp3', isEEWPlaying, () => {
+      isEEWPlaying = true;
+    });
+  }
+}
+
+document.addEventListener('click', playAudioOnUserInteraction);
+
+function updateTime() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  document.getElementById('current-time').textContent = timeString;
+}
+
+// 1秒ごとに時刻を更新
+setInterval(updateTime, 1000);
 
 function fetchEarthquakeData() {
   fetch('https://api.wolfx.jp/jma_eew.json')
@@ -36,15 +72,9 @@ function fetchEarthquakeData() {
                     </div>`;
 
         // 音声ファイルの再生
-        if (!isEEWPlaying) {
-          const audio = new Audio('music/eew.mp3');
-          audio.play();
+        playAudio('music/eew.mp3', isEEWPlaying, () => {
           isEEWPlaying = true;
-
-          audio.addEventListener('ended', () => {
-            isEEWPlaying = false;
-          });
-        }
+        });
       }
       eewElement.innerHTML = content;
     })
@@ -53,183 +83,138 @@ function fetchEarthquakeData() {
     });
 }
 
-  function fetchSeismicIntensityData() {
-    fetch(
-      'https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E5%BA%A6%E9%80%9F%E5%A0%B1.json',
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        const seismicElement = document.getElementById('seismic-data');
-        const infoKind = data.Head.InfoKind;
-        const headline = data.Head.Headline;
-        let content = `<h3>${infoKind}</h3><p>${headline}</p>`;
-        data.Body.Intensity.Observation.Pref.forEach((prefecture) => {
-          prefecture.Area.forEach((area) => {
-            content += `<p>${area.Name}, 最大震度: ${area.MaxInt}</p>`;
-          });
+function fetchSeismicIntensityData() {
+  fetch(
+    'https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E5%BA%A6%E9%80%9F%E5%A0%B1.json',
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      const seismicElement = document.getElementById('seismic-data');
+      const infoKind = data.Head.InfoKind;
+      const headline = data.Head.Headline;
+      let content = `<h3>${infoKind}</h3><p>${headline}</p>`;
+      data.Body.Intensity.Observation.Pref.forEach((prefecture) => {
+        prefecture.Area.forEach((area) => {
+          content += `<p>${area.Name}, 最大震度: ${area.MaxInt}</p>`;
         });
-        seismicElement.innerHTML = content;
-
-        // 音声再生処理
-        if (!isSeismicAudioPlaying) {
-          isSeismicAudioPlaying = true;
-          const audio = new Audio('music/sindsokuhou.mp3');
-          audio.play();
-          audio.addEventListener('ended', () => {
-            isSeismicAudioPlaying = false;
-          });
-        }
-      })
-      .catch((error) => {
-        console.error('震度速報データ取得エラー:', error);
       });
-  }
+      seismicElement.innerHTML = content;
 
-  function fetchHypocenterData() {
-    fetch(
-      'https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E6%BA%90%E3%81%AB%E9%96%A2%E3%81%99%E3%82%8B%E6%83%85%E5%A0%B1.json',
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        const head = data.Head;
-        const body = data.Body;
-        const title = head.Title || '震源に関する情報';
-        const headline = head.Headline || '情報がありません';
-        const depth =
-          body.Earthquake && body.Earthquake.Hypocenter ? body.Earthquake.Hypocenter.Depth : '不明';
-        const magnitudeDescription = body.Earthquake
-          ? body.Earthquake.Magnitude_description
-          : '不明';
-        const observation =
-          body.Comments && body.Comments.Observation
-            ? body.Comments.Observation
-            : 'コメントはありません';
-        const hypocenterElement = document.getElementById('hypocenter-data');
-        hypocenterElement.innerHTML = `
-                    <div>
-                        <h3>${title}</h3>
-                        <p>${headline}</p>
-                        <p>震源の深さ: ${depth} km</p>
-                        <p>マグニチュード: ${magnitudeDescription}</p>
-                        <p>${observation}</p>
-                    </div>`;
-      })
-      .catch((error) => {
-        console.error('震源データ取得エラー:', error);
-        const hypocenterElement = document.getElementById('hypocenter-data');
-        hypocenterElement.innerHTML = `
-                    <div>
-                        <h3>震源に関する情報</h3>
-                        <p>データを取得中にエラーが発生しました。</p>
-                    </div>`;
+      // 音声再生処理
+      playAudio('music/sindsokuhou.mp3', isSeismicAudioPlaying, () => {
+        isSeismicAudioPlaying = true;
       });
-  }
+    })
+    .catch((error) => {
+      console.error('震度速報データ取得エラー:', error);
+    });
+}
 
-  async function fetchEarthquakeInfo() {
-    try {
-      const response = await fetch('https://dev.narikakun.net/webapi/earthquake/post_data.json');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      const head = data.Head || {};
-      const body = data.Body || {};
-      const earthquake = body.Earthquake || {};
-      const hypocenter = earthquake.Hypocenter || {};
-      const infoKind = head.InfoKind || '不明';
+function fetchHypocenterData() {
+  fetch(
+    'https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E6%BA%90%E3%81%AB%E9%96%A2%E3%81%99%E3%82%8B%E6%83%85%E5%A0%B1.json',
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      const head = data.Head;
+      const body = data.Body;
+      const title = head.Title || '震源に関する情報';
       const headline = head.Headline || '情報がありません';
-      const name = hypocenter.Name || '不明';
-      const depth = hypocenter.Depth || '不明';
-      const magnitudeDescription = earthquake.Magnitude_description || '不明';
-      const observationIntensity = body.Intensity?.Observation?.MaxInt || '不明';
-      const comments = body.Comments?.Observation || 'コメントはありません';
-      const prefData = body.Pref || [];
-      let prefInfoHtml = '';
-      prefData.forEach((pref) => {
-        const areas = pref.Area || [];
-        areas.forEach((area) => {
-          const areaName = area.Name || '不明';
-          const maxInt = area.MaxInt || '不明';
-          prefInfoHtml += `
-          <p>${areaName}: 最大震度 ${maxInt}</p>
-        `;
+      const depth =
+        body.Earthquake && body.Earthquake.Hypocenter ? body.Earthquake.Hypocenter.Depth : '不明';
+      const magnitudeDescription = body.Earthquake ? body.Earthquake.Magnitude_description : '不明';
+      const observation =
+        body.Comments && body.Comments.Observation
+          ? body.Comments.Observation
+          : 'コメントはありません';
+      const hypocenterElement = document.getElementById('hypocenter-data');
+      hypocenterElement.innerHTML = `
+                  <div>
+                      <h3>${title}</h3>
+                      <p>${headline}</p>
+                      <p>震源の深さ: ${depth} km</p>
+                      <p>マグニチュード: ${magnitudeDescription}</p>
+                      <p>${observation}</p>
+                  </div>`;
+    })
+    .catch((error) => {
+      console.error('震源データ取得エラー:', error);
+      const hypocenterElement = document.getElementById('hypocenter-data');
+      hypocenterElement.innerHTML = `
+                  <div>
+                      <h3>震源に関する情報</h3>
+                      <p>データを取得中にエラーが発生しました。</p>
+                  </div>`;
+    });
+}
+
+function fetchNewsData() {
+  fetch('https://www3.nhk.or.jp/sokuho/news/sokuho_news.xml') // ニュースデータのAPIエンドポイントに置き換えてください
+    .then((response) => response.text()) // XMLをテキストとして取得
+    .then((xmlText) => {
+      // XMLをパースするためのコード
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      const newsItems = xmlDoc.getElementsByTagName('item');
+      const newsElement = document.getElementById('news-data');
+
+      if (newsItems.length > 0) {
+        let content = '<h3>ニュース速報</h3>';
+        Array.from(newsItems).forEach((item) => {
+          const title = item.getElementsByTagName('title')[0].textContent;
+          const description = item.getElementsByTagName('description')[0].textContent;
+          content += `<p>${title}: ${description}</p>`;
         });
-      });
-      const earthquakeInfoElement = document.getElementById('earthquake-data');
-      earthquakeInfoElement.innerHTML = `
-        <div>
-          <h3>${infoKind}</h3>
-          <p>${headline}</p>
-          <p>最大震度: ${observationIntensity}</p>
-          <p>マグニチュード: ${magnitudeDescription}</p>
-          <p>震源: ${name}</p>
-          <p>震源の深さ: ${depth} km</p>
-          <p>${comments}</p>
-          <div>${prefInfoHtml}</div>
-        </div>`;
-    } catch (error) {
-      console.error('地震情報取得エラー:', error);
-      const earthquakeInfoElement = document.getElementById('earthquake-data');
-      earthquakeInfoElement.innerHTML = `
-        <div>
-          <h3>地震情報</h3>
-          <p>データを取得中にエラーが発生しました。</p>
-        </div>`;
+        newsElement.innerHTML = content;
+      } else {
+        newsElement.innerHTML = '<h3>ニュース速報</h3><p>現在ニュース速報を受信していません。</p>';
+      }
+    })
+    .catch((error) => {
+      console.error('ニュースデータ取得エラー:', error);
+      const newsElement = document.getElementById('news-data');
+      newsElement.innerHTML =
+        '<h3>ニュース速報</h3><p>ニュースデータを取得中にエラーが発生しました。</p>';
+    });
+}
+
+async function fetchEarthquakeInfo() {
+  try {
+    const response = await fetch('https://dev.narikakun.net/webapi/earthquake/post_data.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }
+    const data = await response.json();
+    const head = data.Head || {};
+    const body = data.Body || {};
+    const earthquake = body.Earthquake || {};
+    const hypocenter = earthquake.Hypocenter || {};
 
-  function fetchNewsData() {
-    fetch('https://www3.nhk.or.jp/sokuho/news/sokuho_news.xml')
-      .then((response) => response.text())
-      .then((data) => {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(data, 'application/xml');
-        const flashNews = xmlDoc.querySelector('flashNews');
-
-        if (flashNews.getAttribute('flag') === '1') {
-          const latestReport = xmlDoc.querySelector('report');
-          const latestNewsLine = latestReport.querySelector('line').textContent;
-          const latestNewsDate = latestReport.getAttribute('date');
-
-          const newsElement = document.getElementById('news-data');
-          newsElement.innerHTML = `
-            <div>
-              <h3>ニュース速報</h3>
-              <p>${latestNewsLine}</p>
-              <p>発表日時: ${latestNewsDate}</p>
-            </div>`;
-        } else {
-          const newsElement = document.getElementById('news-data');
-          newsElement.innerHTML = `
-            <div>
-              <h3>ニュース速報</h3>
-              <p>最新のニュース速報はありません。</p>
-            </div>`;
-        }
-      })
-      .catch((error) => {
-        console.error('ニュースデータ取得エラー:', error);
-        const newsElement = document.getElementById('news-data');
-        newsElement.innerHTML = `
-          <div>
-            <h3>ニュース速報</h3>
+    document.getElementById('earthquake-data').innerHTML = `
+        <div>
+            <h3>${head.Title || '地震情報'}</h3>
+            <p>${head.Headline || '情報がありません'}</p>
+            <p>震源: ${hypocenter.Name || '不明'}</p>
+            <p>深さ: ${hypocenter.Depth || '不明'}</p>
+            <p>マグニチュード: ${earthquake.Magnitude || '不明'}</p>
+        </div>`;
+  } catch (error) {
+    console.error('地震情報取得エラー:', error);
+    document.getElementById('earthquake-data').innerHTML = `
+        <div>
+            <h3>地震情報</h3>
             <p>データを取得中にエラーが発生しました。</p>
-          </div>`;
-      });
+        </div>`;
   }
+}
 
-  let isSeismicAudioPlaying = false; // 音声再生中フラグ
-  let isEEWPlaying = false;
-
+function init() {
+  updateTime();
   fetchEarthquakeData();
-  fetchNewsData();
   fetchSeismicIntensityData();
   fetchHypocenterData();
   fetchEarthquakeInfo();
+  fetchNewsData();
+}
 
-  setInterval(fetchEarthquakeData, 20000);
-  setInterval(fetchNewsData, 30000);
-  setInterval(fetchSeismicIntensityData, 20000);
-  setInterval(fetchHypocenterData, 20000);
-  setInterval(fetchEarthquakeInfo, 25000);
-});
+document.addEventListener('DOMContentLoaded', init);
