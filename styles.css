@@ -1,0 +1,121 @@
+/* 基本のスタイル */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+
+header {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 17px;
+}
+
+/* 現在時刻のスタイル */
+#current-time {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+/* セクションスタイル */
+.section {
+  background-color: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 各セクションのタイトル */
+h3 {
+  color: #007bff;
+  font-size: 22px;
+}
+
+/* 緊急地震速報とニュースのデータ表示エリア */
+#eew-data,
+#news-data,
+#earthquake-info {
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* 警告と予報のスタイル */
+.warn {
+  color: red;
+  font-weight: bold;
+}
+
+.forecast {
+  color: orange;
+  font-weight: bold;
+}
+
+/* 震度速報のスタイル */
+#seismic-data {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.earthquake-area {
+  margin-bottom: 10px;
+}
+
+.earthquake-area h4 {
+  margin: 0;
+  font-size: 18px;
+  color: #343a40;
+}
+
+.earthquake-area p {
+  margin: 5px 0;
+  color: #6c757d;
+}
+
+/* 火山情報のスタイル */
+#volcano-info {
+  background-color: #e9ecef;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+#volcano-select {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+#volcano-info-content {
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  .section {
+    padding: 15px;
+  }
+
+  h3 {
+    font-size: 20px;
+  }
+
+  #current-time {
+    font-size: 16px;
+  }
+}
