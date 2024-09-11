@@ -80,25 +80,70 @@ h3 {
   color: #6c757d;
 }
 
-/* 火山情報のスタイル */
-#volcano-info {
-  background-color: #e9ecef;
-  padding: 15px;
-  border-radius: 4px;
+/* 台風タブのスタイル */
+#typhoon-tabs {
+  display: flex;
   margin-bottom: 20px;
 }
 
-#volcano-select {
-  width: 100%;
+#typhoon-tabs button {
   padding: 10px;
-  font-size: 16px;
-  border-radius: 4px;
   border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  cursor: pointer;
 }
 
-#volcano-info-content {
-  margin-top: 20px;
+#typhoon-tabs button.active {
+  background-color: #ddd;
+  border-bottom: 1px solid transparent;
+}
+
+#typhoon-tabs button:hover {
+  background-color: #0056b3;
+}
+
+/* 台風情報セクション */
+#typhoon-info {
+  display: none;
+}
+
+#typhoon-info.active {
+  display: block;
+}
+
+/* 台風情報のスタイル */
+.typhoon-info {
+  display: none;
+}
+
+.typhoon-info.active {
+  display: block;
+}
+
+#typhoon-info img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+#typhoon-info p {
   font-size: 16px;
+  line-height: 1.5;
+}
+
+.image-selection {
+  margin-top: 10px;
+}
+
+.image-selection label {
+  display: block;
+  margin-top: 10px;
+}
+
+.image-selection img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
 }
 
 /* レスポンシブデザイン */
@@ -118,4 +163,98 @@ h3 {
   #current-time {
     font-size: 16px;
   }
+}
+
+/* 追加のスタイル */
+
+/* ボタンのスタイル */
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* フォーム要素のスタイル */
+input[type="text"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0 20px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+/* テーブルスタイル */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+table, th, td {
+  border: 1px solid #ddd;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* スクロールエリアのスタイル */
+.scrollable {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* カードコンポーネントスタイル */
+.card {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.card h4 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #007bff;
+}
+
+.card p {
+  font-size: 16px;
+  color: #555;
 }
