@@ -1,38 +1,4 @@
-let isSeismicAudioPlaying = false; // 音声再生中フラグ
 let isEEWPlaying = false;
-
-// 音声再生をユーザーのクリックでトリガーする関数
-function playAudio(file, isPlayingFlag, callback) {
-  if (!isPlayingFlag) {
-    const audio = new Audio(file);
-    audio
-      .play()
-      .then(() => {
-        if (callback) callback();
-        audio.addEventListener('ended', () => {
-          isPlayingFlag = false;
-        });
-      })
-      .catch((error) => {
-        console.error(`${file}の音声再生エラー:`, error);
-        alert('音声再生の許可が必要です。再度試してください。');
-      });
-  }
-}
-
-function playAudioOnUserInteraction() {
-  if (!userInteracted) {
-    userInteracted = true; // ユーザーが一度操作したら再度呼び出されないようにする
-    playAudio('music/sindsokuhou.mp3', isSeismicAudioPlaying, () => {
-      isSeismicAudioPlaying = true;
-    });
-    playAudio('music/eew.mp3', isEEWPlaying, () => {
-      isEEWPlaying = true;
-    });
-  }
-}
-
-document.addEventListener('click', playAudioOnUserInteraction);
 
 function updateTime() {
   const now = new Date();
@@ -70,11 +36,6 @@ function fetchEarthquakeData() {
                         深さ: ${data.Depth || '不明'}<br>
                         震源: ${data.Hypocenter || '不明'}<br>
                     </div>`;
-
-        // 音声ファイルの再生
-        playAudio('music/eew.mp3', isEEWPlaying, () => {
-          isEEWPlaying = true;
-        });
       }
       eewElement.innerHTML = content;
     })
