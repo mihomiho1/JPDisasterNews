@@ -160,15 +160,16 @@ function fetchNewsData() {
     .then((xmlText) => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-      const newsItems = xmlDoc.getElementsByTagName('item');
+      const reports = xmlDoc.getElementsByTagName('report');
       const newsElement = document.getElementById('news-data');
 
-      if (newsItems.length > 0) {
+      if (reports.length > 0) {
         let content = '<h3>ニュース速報</h3>';
-        Array.from(newsItems).forEach((item) => {
-          const title = item.getElementsByTagName('title')[0].textContent;
-          const description = item.getElementsByTagName('description')[0].textContent;
-          content += `<p>${title}: ${description}</p>`;
+        Array.from(reports).forEach((report) => {
+          const category = report.getAttribute('category');
+          const date = report.getAttribute('date');
+          const line = report.getElementsByTagName('line')[0].textContent;
+          content += `<p>【NHKニュース速報: ${line}】</p>`;
         });
         newsElement.innerHTML = content;
       } else {
