@@ -23,9 +23,9 @@ async function fetchAndUpdateData() {
       fetchSeismicIntensityData(),
       fetchHypocenterData(),
       fetchEarthquakeInfo(),
-      fetchNewsData()
+      fetchNewsData(),
     ]);
-    
+
     // 台風情報を1分ごとにチェック
     const now = Date.now();
     if (now - lastTyphoonUpdate > 60000) {
@@ -48,14 +48,32 @@ async function fetchEarthquakeInfo() {
     const body = data.Body || {};
     const earthquake = body.Earthquake || {};
     const hypocenter = earthquake.Hypocenter || {};
+    const intensity = body.Intensity || {};
+    const observation = intensity.Observation || {};
+    const maxIntensity = observation.MaxInt || '不明';
+    const tsunamiComment = body.Comments?.Observation || '情報なし'; //コメント
+
+    // 震度分布のデータを取得
+    let intensityDistribution = '';
+    const prefs = observation.Pref || [];
+    prefs.forEach((prefecture) => {
+      const areas = prefecture.Area || [];
+      areas.forEach((area) => {
+        intensityDistribution += `<p>${prefecture.Name} - ${area.Name}: 震度 ${area.MaxInt}</p>`;
+      });
+    });
 
     document.getElementById('earthquake-data').innerHTML = `
         <div>
             <h3>${head.Title || '地震情報'}</h3>
             <p>${head.Headline || '情報がありません'}</p>
-            <p>震源: ${hypocenter.Name || '不明'}</p>
-            <p>深さ: ${hypocenter.Depth || '不明'}</p>
+            <p>最大震度: ${maxIntensity}</p>
             <p>マグニチュード: ${earthquake.Magnitude || '不明'}</p>
+            <p>震源: ${hypocenter.Name || '不明'}</p>
+            <p>深さ: ${hypocenter.Depth ? hypocenter.Depth + ' km' : '不明'}</p>
+            <p>${tsunamiComment}</p> <!-- 津波コメント -->
+            <h4>各地の震度</h4>
+            ${intensityDistribution} <!-- 各地の震度 -->
         </div>`;
   } catch (error) {
     console.error('地震情報取得エラー:', error);
@@ -99,7 +117,9 @@ function fetchEarthquakeData() {
 }
 
 function fetchSeismicIntensityData() {
-  return fetch('https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E5%BA%A6%E9%80%9F%E5%A0%B1.json')
+  return fetch(
+    'https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E5%BA%A6%E9%80%9F%E5%A0%B1.json',
+  )
     .then((response) => response.json())
     .then((data) => {
       const seismicElement = document.getElementById('seismic-data');
@@ -119,7 +139,9 @@ function fetchSeismicIntensityData() {
 }
 
 function fetchHypocenterData() {
-  return fetch('https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E6%BA%90%E3%81%AB%E9%96%A2%E3%81%99%E3%82%8B%E6%83%85%E5%A0%B1.json')
+  return fetch(
+    'https://dev.narikakun.net/webapi/earthquake/last/%E9%9C%87%E6%BA%90%E3%81%AB%E9%96%A2%E3%81%99%E3%82%8B%E6%83%85%E5%A0%B1.json',
+  )
     .then((response) => response.json())
     .then((data) => {
       const head = data.Head;
@@ -155,7 +177,7 @@ function fetchHypocenterData() {
 }
 
 function fetchNewsData() {
-  return fetch('https://www3.nhk.or.jp/sokuho/news/sokuho_news.xml') // ニュースデータのAPIエンドポイントに置き換えてください
+  return fetch('https://www3.nhk.or.jp/sokuho/news/sokuho_news.xml')
     .then((response) => response.text())
     .then((xmlText) => {
       const parser = new DOMParser();
@@ -186,7 +208,9 @@ function fetchNewsData() {
 
 async function fetchTyphoonData() {
   try {
-    const response = await fetch('https://www.nhk.or.jp/weather-data/v1/wx/typhoon_web/?akey=18cce8ec1fb2982a4e11dd6b1b3efa36');
+    const response = await fetch(
+      'https://www.nhk.or.jp/weather-data/v1/wx/typhoon_web/?akey=18cce8ec1fb2982a4e11dd6b1b3efa36',
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -198,7 +222,9 @@ async function fetchTyphoonData() {
 
     if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
       responseData.data.forEach((typhoon, index) => {
-        tabsContent += `<button class="${index === 0 ? 'active' : ''}" onclick="showTyphoonInfo(${index})">${typhoon.title}</button>`;
+        tabsContent += `<button class="${
+          index === 0 ? 'active' : ''
+        }" onclick="showTyphoonInfo(${index})">${typhoon.title}</button>`;
         typhoonContent += generateTyphoonContent(typhoon, index === 0);
       });
     } else {
