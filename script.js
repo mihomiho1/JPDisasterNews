@@ -300,7 +300,7 @@ document.getElementById('toggle-button').addEventListener('click', toggleTyphoon
 function init() {
   updateTime();
   fetchAndUpdateData(); // 初回のデータ取得
-  setInterval(fetchAndUpdateData, 60000); // 1分ごとにデータ更新
+  setInterval(fetchAndUpdateData, 20000);
 }
 
 document.addEventListener('DOMContentLoaded', init);
