@@ -85,6 +85,25 @@ async function fetchEarthquakeInfo() {
   }
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+  // 地震情報を表示する部分
+  const earthquakeContainer = document.getElementById('earthquake-info');
+
+  earthquakeContainer.innerHTML = `
+    <h1>${earthquakeData.time}に発生した地震</h1>
+    <p>震源: ${earthquakeData.epicenter}</p>
+    <p>震源の深さ: ${earthquakeData.depth}</p>
+    <p>マグニチュード: ${earthquakeData.magnitude}</p>
+    <p>最大震度: ${earthquakeData.intensity}</p>
+    <h2>震度マップ(概況)</h2>
+    <img src="${earthquakeData.detail}" alt="震度マップ 概況">
+    <h2>震度マップ(拡大)</h2>
+    <img src="${earthquakeData.local}" alt="震度マップ 拡大">
+    <h2>震度マップ(広域)</h2>
+    <img src="${earthquakeData.global}" alt="震度マップ 広域">
+  `;
+});
+
 function fetchEarthquakeData() {
   return fetch('https://api.wolfx.jp/jma_eew.json')
     .then((response) => response.json())
@@ -184,123 +203,49 @@ function fetchNewsData() {
       const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
       const reports = xmlDoc.getElementsByTagName('report');
       const newsElement = document.getElementById('news-data');
+      newsElement.innerHTML = '';
 
-      if (reports.length > 0) {
-        let content = '<h3>ニュース速報</h3>';
-        Array.from(reports).forEach((report) => {
-          const category = report.getAttribute('category');
-          const date = report.getAttribute('date');
-          const line = report.getElementsByTagName('line')[0].textContent;
-          content += `<p>【NHKニュース速報: ${line}】</p>`;
-        });
-        newsElement.innerHTML = content;
-      } else {
-        newsElement.innerHTML = '<h3>ニュース速報</h3><p>現在ニュース速報を受信していません。</p>';
-      }
+      Array.from(reports).forEach((report) => {
+        const title = report.getElementsByTagName('title')[0].textContent;
+        const area = report.getElementsByTagName('area')[0].textContent;
+        const magnitude = report.getElementsByTagName('magnitude')[0].textContent;
+        const intensity = report.getElementsByTagName('intensity')[0].textContent;
+        newsElement.innerHTML += `
+                    <div>
+                        <h3>${title}</h3>
+                        <p>${area} - マグニチュード: ${magnitude}, 震度: ${intensity}</p>
+                    </div>`;
+      });
     })
     .catch((error) => {
       console.error('ニュースデータ取得エラー:', error);
-      const newsElement = document.getElementById('news-data');
-      newsElement.innerHTML =
-        '<h3>ニュース速報</h3><p>ニュースデータを取得中にエラーが発生しました。</p>';
     });
 }
 
-async function fetchTyphoonData() {
-  try {
-    const response = await fetch(
-      'https://www.nhk.or.jp/weather-data/v1/wx/typhoon_web/?akey=18cce8ec1fb2982a4e11dd6b1b3efa36',
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const responseData = await response.json();
-    const typhoonTabsElement = document.getElementById('typhoon-tabs');
-    const typhoonInfoElement = document.getElementById('typhoon-info');
-    let tabsContent = '';
-    let typhoonContent = '';
-
-    if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
-      responseData.data.forEach((typhoon, index) => {
-        tabsContent += `<button class="${
-          index === 0 ? 'active' : ''
-        }" onclick="showTyphoonInfo(${index})">${typhoon.title}</button>`;
-        typhoonContent += generateTyphoonContent(typhoon, index === 0);
-      });
-    } else {
-      typhoonInfoElement.innerHTML = '<p>台風情報はありません。</p>';
-    }
-
-    typhoonTabsElement.innerHTML = tabsContent;
-    typhoonInfoElement.innerHTML = typhoonContent;
-  } catch (error) {
-    console.error('台風データ取得エラー:', error);
-    const typhoonInfoElement = document.getElementById('typhoon-info');
-    typhoonInfoElement.innerHTML = `
-      <p>データを取得中にエラーが発生しました。</p>
-      <p>詳細は<a href="https://www.nhk.or.jp/kishou-saigai/typhoon/" target="_blank" rel="noopener">NHK気象災害サイト</a>よりご覧ください。</p>
-    `;
-  }
+function fetchTyphoonData() {
+  return fetch('https://api.wolfx.jp/typhoon/json')
+    .then((response) => response.json())
+    .then((data) => {
+      const typhoonElement = document.getElementById('typhoon-data');
+      let content = '';
+      if (data.length > 0) {
+        content = '<ul>';
+        data.forEach((typhoon) => {
+          content += `<li>${typhoon.typhoonName} - ${typhoon.typhoonInfo}</li>`;
+        });
+        content += '</ul>';
+        isTyphoonInfoVisible = true;
+      } else {
+        content = '現在台風の情報はありません。';
+        isTyphoonInfoVisible = false;
+      }
+      typhoonElement.innerHTML = content;
+    })
+    .catch((error) => {
+      console.error('台風データ取得エラー:', error);
+    });
 }
 
-function generateTyphoonContent(typhoon, isActive) {
-  return `
-    <div class="typhoon-info" style="display: ${isActive ? 'block' : 'none'};">
-      <p>中心気圧: ${typhoon.center_press || '不明'} ${typhoon.center_press_unit || ''}</p>
-      <p>最大瞬間風速: ${typhoon.max_inst_wind || '不明'} ${typhoon.max_inst_wind_unit || ''}</p>
-      <p>最大風速: ${typhoon.max_wind || '不明'} ${typhoon.max_wind_unit || ''}</p>
-      <p>位置: ${typhoon.existance_area_text || '不明'}</p>
-      <p>進行方向: ${typhoon.direction || '不明'}</p>
-      <p>移動速度: ${typhoon.speed || '不明'} ${typhoon.speed_unit || ''}</p>
-      <div class="image-selection">
-        <label for="image-${typhoon.typh_no}-current">現在位置</label>
-        <input type="radio" id="image-${typhoon.typh_no}-current" name="typhoon-image-${
-    typhoon.typh_no
-  }" value="${typhoon.img_current}" checked>
-        <img src="${typhoon.img_current}" alt="Current Image" width="500">
-
-        <label for="image-${typhoon.typh_no}-fcst3">三日間予測</label>
-        <input type="radio" id="image-${typhoon.typh_no}-fcst3" name="typhoon-image-${
-    typhoon.typh_no
-  }" value="${typhoon.img_fcst3}">
-        <img src="${typhoon.img_fcst3}" alt="3 Day Forecast Image" width="500">
-
-        <label for="image-${typhoon.typh_no}-fcst5">五日間予測</label>
-        <input type="radio" id="image-${typhoon.typh_no}-fcst5" name="typhoon-image-${
-    typhoon.typh_no
-  }" value="${typhoon.img_fcst5}">
-        <img src="${typhoon.img_fcst5}" alt="5 Day Forecast Image" width="500">
-      </div>
-    </div>
-  `;
-}
-
-function showTyphoonInfo(index) {
-  const typhoonInfos = document.querySelectorAll('.typhoon-info');
-  const tabs = document.querySelectorAll('#typhoon-tabs button');
-
-  typhoonInfos.forEach((info, idx) => {
-    info.style.display = idx === index ? 'block' : 'none';
-  });
-
-  tabs.forEach((tab, idx) => {
-    tab.classList.toggle('active', idx === index);
-  });
-}
-
-function toggleTyphoonInfo() {
-  const typhoonInfoElement = document.getElementById('typhoon-info');
-  isTyphoonInfoVisible = !isTyphoonInfoVisible;
-  typhoonInfoElement.style.display = isTyphoonInfoVisible ? 'block' : 'none';
-  document.getElementById('toggle-button').textContent = isTyphoonInfoVisible ? '閉じる' : '展開';
-}
-
-document.getElementById('toggle-button').addEventListener('click', toggleTyphoonInfo);
-
-function init() {
-  updateTime();
-  fetchAndUpdateData(); // 初回のデータ取得
-  setInterval(fetchAndUpdateData, 20000);
-}
-
-document.addEventListener('DOMContentLoaded', init);
+// 初回データ取得とその後の定期的な更新
+fetchAndUpdateData();
+setInterval(fetchAndUpdateData, 30000);

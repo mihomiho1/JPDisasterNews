@@ -258,3 +258,63 @@ tr:nth-child(even) {
   font-size: 16px;
   color: #555;
 }
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+header {
+  background: #35424a;
+  color: #ffffff;
+  padding: 20px 0;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+}
+
+h3 {
+  color: #333;
+}
+
+.section {
+  background: #ffffff;
+  margin: 20px;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#current-time {
+  text-align: center;
+  font-size: 24px;
+  margin: 20px 0;
+}
+
+#toggle-button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background-color: #35424a;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#toggle-button:hover {
+  background-color: #455a64;
+}
+
+a {
+  color: #35424a;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
